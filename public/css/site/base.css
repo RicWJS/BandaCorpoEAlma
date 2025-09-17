@@ -1,0 +1,76 @@
+/* public/css/site/base.css */
+
+:root {
+  --color-primary: #9b2321;
+  --color-primary-dark: #6c1a18;
+  --color-primary-gradient: linear-gradient(90deg, var(--color-primary-dark), var(--color-primary));
+  --color-background: #080808;
+  --color-primary-text: #ffffff;
+  --color-secondary-text: #c0c0c0;
+  --color-bright-transparency-1: rgba(255, 255, 255, 0.1);
+  --color-bright-transparency-2: rgba(255, 255, 255, 0.2);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Titillium Web", sans-serif;
+  line-height: 1.6;
+  color: var(--color-secondary-text);
+  background-color: var(--color-background);
+  background-image: url('/laravel/public/images/body-bg-4.jpg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center top;
+}
+
+.body-wrap {
+  background: linear-gradient(180deg, transparent 400px, var(--color-background) 600px);
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+ul {
+  list-style-type: none;
+}
+
+.interactive-element {
+  position: relative;
+  overflow: hidden;
+}
+
+.interactive-element::before {
+  content: "";
+  position: absolute;
+  top: var(--y, 50%);
+  left: var(--x, 50%);
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-bright-transparency-2) 0%, var(--color-bright-transparency-1) 30%, transparent 70%);
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.interactive-element:hover::before {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+    body {
+        background-size: 150vh;
+    }
+
+    main {
+        padding-top: 150px;
+    }
+}

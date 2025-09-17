@@ -1,0 +1,124 @@
+/* laravel\public\css\admin\sidebar.css */
+
+.admin-sidebar {
+  width: 250px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  background-color: #22262e;
+  padding-top: 20px;
+  border-right: 1px solid #3f4550;
+}
+
+.admin-sidebar .sidebar-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.admin-sidebar .sidebar-header h2 {
+  margin: 0;
+  color: #4a90e2;
+  font-weight: 600;
+}
+
+.admin-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-top: 1px solid #3f4550;
+}
+
+.admin-nav li {
+  border-bottom: 1px solid #3f4550;
+}
+
+.admin-nav li a,
+.admin-nav li .nav-item {
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  color: #d0d2d6;
+  text-decoration: none;
+  transition: background-color 0.3s, color 0.3s;
+  cursor: pointer;
+}
+
+.admin-nav li a i,
+.admin-nav li .nav-item i {
+  margin-right: 15px;
+  width: 20px;
+  text-align: center;
+}
+
+.admin-nav > li.active {
+    border-left: 4px solid #4a90e2;
+    background-color: #1a1d24;
+}
+
+.admin-nav > li.active > a,
+.admin-nav > li.active > .nav-item {
+    color: #ffffff;
+    padding-left: 16px;
+}
+
+.submenu li.active-submenu a {
+    color: #4a90e2;
+    font-weight: bold;
+}
+
+.admin-nav li a:hover,
+.admin-nav li .nav-item:hover {
+  background-color: #303540;
+  color: #fff;
+}
+
+.admin-nav li form {
+  margin: 0;
+}
+
+.admin-nav li button.nav-item {
+  width: 100%;
+  background: none;
+  border: none;
+  font-size: inherit;
+  font-family: inherit;
+  text-align: left;
+}
+
+.submenu {
+  list-style: none;
+  padding-left: 0;
+  background-color: #171a1f;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease-in-out;
+}
+
+.submenu.open {
+  max-height: 500px;
+}
+
+.submenu li {
+  border-bottom-style: dotted;
+}
+
+.submenu li:last-child {
+  border: none;
+}
+
+.submenu li a {
+  padding-left: 25px;
+  font-size: 0.9em;
+}
+
+.submenu li a::before {
+  content: "\f105";
+  font-family: "Font Awesome 5 Free";
+  font-weight: 900;
+  margin-right: 10px;
+}
+
+.nav-item.has-submenu {
+    border-bottom: 1px solid #3f4550;
+}

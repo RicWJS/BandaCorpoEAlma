@@ -1,0 +1,56 @@
+/* public/css/site/components/spotify-embed-section.css */
+
+.spotify-embed-section {
+  background-color: #2d0000;
+}
+
+.spotify-embed-section .section-content {
+  display: flex;
+  flex-direction: row;
+  gap: 50px;
+}
+
+.spotify-cover {
+  width: 50%;
+}
+
+.spotify-cover img {
+  width: 100%;
+  border-radius: 15px;
+  box-shadow: 0 0 0 2px var(--color-bright-transparency-2);
+}
+
+.spotify-embed {
+  width: 50%;
+}
+
+.spotify-embed iframe {
+  width: 100%;
+  height: 575px;
+  box-shadow: 0 0 0 2px var(--color-bright-transparency-2);
+}
+
+/* ================================================= */
+/* === RESPONSIVIDADE PARA A SEÇÃO DO SPOTIFY === */
+/* ================================================= */
+
+@media (max-width: 768px) {
+  .spotify-embed-section .section-content {
+    /* Altera o layout para empilhar os itens verticalmente */
+    flex-direction: column;
+    align-items: center; /* Centraliza os itens na coluna */
+    gap: 20px;
+  }
+
+  .spotify-cover,
+  .spotify-embed {
+    /* Faz com que ambos os itens ocupem 100% da largura */
+    width: 100%;
+    max-width: 450px; /* Adiciona uma largura máxima para não esticar demais em tablets */
+  }
+
+  .spotify-embed iframe {
+    /* Ajusta a altura do player para um valor mais adequado em telas menores */
+    height: 380px;
+  }
+}

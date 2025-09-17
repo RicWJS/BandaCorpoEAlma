@@ -1,0 +1,309 @@
+/* public/css/site/components/main-banner-section.css */
+
+.section-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #000000, transparent);
+  z-index: 0;
+}
+
+.main-banner-section .section-container {
+  height: 100vh;
+}
+
+.main-banner-content {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.main-banner-content-container {
+  padding-top: 150px;
+}
+
+.main-banner-title {
+  width: 50%;
+  color: #ffffff;
+  font-family: "Titillium Web", Sans-serif;
+  font-size: 60px;
+  font-weight: 700;
+  line-height: 1;
+  padding-bottom: 30px;
+}
+
+.main-banner-excerpt {
+  width: 40%;
+  padding-bottom: 30px;
+}
+
+.main-banner-buttons {
+  display: flex;
+  gap: 30px;
+  justify-content: start;
+  align-items: center;
+}
+
+.main-banner-buttons .btn-spotify {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  border-radius: 99px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #1db954;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.main-banner-buttons .btn-spotify i {
+  font-size: 18px;
+}
+
+.main-banner-buttons .btn-spotify:hover {
+  background: #149a43;
+}
+
+/* NOVO ESTILO: Botão Saiba Mais */
+.main-banner-buttons .btn-learn-more {
+  border: 2px solid #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+.main-banner-buttons .btn-learn-more:hover {
+  background: rgba(255, 255, 255, 0.2); /* Efeito hover */
+}
+
+
+.btn-video-popup {
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  font-weight: bold;
+  color: white;
+  background: none;
+  border: none;
+  font-family: inherit;
+}
+
+.popup-play-icon {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.popup-play-icon-border {
+  width: 100%;
+  height: 100%;
+  color: white;
+  border: 3px solid var(--color-primary);
+  border-radius: 50%;
+  position: relative;
+  z-index: 6;
+  transition: all 0.4s ease;
+}
+
+.popup-play-icon-border:before {
+  content: " ";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  animation: button-ripple 2s infinite;
+  opacity: 0.6;
+  z-index: -1;
+}
+
+.btn-video-popup i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-left: 1px;
+  transform: translate(-50%, -50%);
+  z-index: 50;
+  display: inline-block;
+}
+
+.btn-video-popup span {
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+.btn-video-popup:hover {
+    color: #cccccc;
+}
+
+.btn-video-popup:hover .popup-play-icon-border {
+  background: var(--color-primary);
+}
+
+@keyframes button-ripple {
+  0% { background: transparent; }
+  40% { background: rgba(255, 255, 255, 0.5); }
+  70% { box-shadow: 0 0 0 15px currentColor; opacity: 0; background: transparent; }
+  100% { box-shadow: 0 0 0 0 currentColor; opacity: 0; }
+}
+
+/* Appended styles for YouTube Popup */
+
+.video-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.video-popup-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.video-popup-container {
+  position: relative;
+  width: 90%;
+  max-width: 900px;
+  transform: scale(0.8);
+  transition: transform 0.4s ease;
+}
+
+.video-popup-overlay.active .video-popup-container {
+  transform: scale(1);
+}
+
+.video-popup-content {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+  height: 0;
+  overflow: hidden;
+}
+
+.video-popup-content iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.video-popup-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 35px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+
+.video-popup-close:hover {
+  opacity: 1;
+}
+
+/* ======================================= */
+/* === RESPONSIVIDADE PARA O BANNER === */
+/* ======================================= */
+
+@media (max-width: 992px) {
+    .main-banner-title {
+        font-size: 50px; /* Reduz o título em telas de tablet */
+        width: 60%;
+    }
+
+    .main-banner-excerpt {
+        width: 50%;
+    }
+
+    .main-banner-content-container {
+        padding-top: 120px;
+    }
+}
+
+@media (max-width: 768px) {
+    .section-overlay {
+        /* Garante que o gradiente escuro cubra mais a imagem no mobile para legibilidade */
+        background: linear-gradient(90deg, #000000 40%, rgba(0,0,0,0.6));
+    }
+    
+    .main-banner-section .section-container {
+        height: auto; /* Remove a altura de 100vh */
+        padding: 180px 0 80px 0; /* Adiciona padding para dar espaço ao conteúdo */
+    }
+
+    .main-banner-content {
+        /* Centraliza todo o conteúdo do banner */
+        justify-content: center;
+        text-align: center;
+    }
+
+    .main-banner-content-container {
+        padding-top: 0; /* Remove o padding do topo que não é mais necessário */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .main-banner-title {
+        font-size: 38px; /* Reduz drasticamente o título */
+        width: 90%; /* Ocupa quase toda a largura */
+        line-height: 1.2;
+    }
+
+    .main-banner-excerpt {
+        width: 85%; /* Ocupa quase toda a largura */
+        font-size: 16px;
+    }
+    
+    .main-banner-buttons {
+        /* Empilha os botões verticalmente */
+        flex-direction: column;
+        gap: 20px;
+        align-items: center; /* Centraliza os botões */
+    }
+
+    .btn-video-popup {
+        justify-content: center; /* Garante alinhamento do ícone e texto */
+    }
+}
+
+@media (max-width: 480px) {
+    .main-banner-title {
+        font-size: 32px; /* Ajuste final para telas bem pequenas */
+    }
+
+    .main-banner-buttons .btn-spotify,
+    .main-banner-buttons .btn-learn-more {
+        width: 90%; /* Faz os botões ocuparem mais espaço */
+        justify-content: center;
+    }
+}
