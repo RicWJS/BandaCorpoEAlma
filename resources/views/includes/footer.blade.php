@@ -19,7 +19,6 @@
                             <ul class="footer-menu">
                                 <li class="footer-nav-item"><a href="{{ route('home') }}" class="footer-nav-link">Home</a></li>
                                 <li class="footer-nav-item"><a href="{{ route('news.index') }}" class="footer-nav-link">Notícias</a></li>
-                                <li class="footer-nav-item"><a href="{{ route('contact') }}" class="footer-nav-link">Contato</a></li>
                             </ul>
                         </nav>
                     </div>
