@@ -33,7 +33,6 @@ class FormController extends Controller
 
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('banners', 'public');
-            // Se houver uma imagem antiga, pode ser interessante deletá-la aqui
             $bannerSection->image_path = $imagePath;
         }
 
@@ -57,22 +56,21 @@ class FormController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'embed_code' => 'required|string',
+            'embed_link' => 'required|string',
         ]);
 
-        $embedCode = $request->input('embed_code');
+        $embedCode = $request->input('embed_link');
         $coverImageUrl = $this->getSpotifyCoverFromEmbed($embedCode);
 
         if (!$coverImageUrl) {
-            // Se a API falhar, continuamos salvando o embed, mas retornamos um aviso.
-            return redirect()->back()->with('error', 'Não foi possível obter a capa do Spotify. Verifique o código de embed e suas credenciais da API.');
+            return redirect()->back()->with('error', 'Não foi possível obter a capa do Spotify. Verifique o código de embed e se as credenciais da API estão corretas no .env.');
         }
 
         SpotifySection::updateOrCreate(
-            ['id' => 1], // Sempre atualiza o primeiro e único registro
+            ['id' => 1],
             [
                 'title' => $request->input('title'),
-                'embed_code' => $embedCode,
+                'embed_link' => $embedCode,
                 'cover_image_url' => $coverImageUrl,
             ]
         );
@@ -83,17 +81,12 @@ class FormController extends Controller
 
     // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY ---
 
-    /**
-     * Obtém a imagem da capa do Spotify em alta resolução a partir do código de embed.
-     * Retorna a URL da imagem ou null em caso de falha.
-     */
     private function getSpotifyCoverFromEmbed(?string $embedCode): ?string
     {
         if (empty($embedCode)) {
             return null;
         }
 
-        // 1. Extrair o ID da música do código de embed
         preg_match('/\/track\/([a-zA-Z0-9]+)/', $embedCode, $matches);
         $trackId = $matches[1] ?? null;
 
@@ -102,19 +95,16 @@ class FormController extends Controller
             return null;
         }
 
-        // 2. Obter o token de acesso
         $accessToken = $this->getSpotifyAccessToken();
         if (!$accessToken) {
             Log::error('Spotify API: Falha ao obter o Access Token.');
             return null;
         }
 
-        // 3. Fazer a chamada para a API Web do Spotify
         $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$trackId}");
 
         if ($response->successful()) {
             $trackData = $response->json();
-            // A API retorna imagens em várias resoluções. O índice 0 é 640x640.
             if (!empty($trackData['album']['images'][0]['url'])) {
                 return $trackData['album']['images'][0]['url'];
             }
@@ -124,18 +114,14 @@ class FormController extends Controller
         return null;
     }
 
-    /**
-     * Obtém um token de acesso da API do Spotify.
-     * O token é armazenado em cache para otimizar requisições futuras.
-     */
     private function getSpotifyAccessToken(): ?string
     {
         return Cache::remember('spotify_access_token', 3500, function () {
-            $clientId = config('services.spotify.client_id');
-            $clientSecret = config('services.spotify.client_secret');
+            $clientId = env('SPOTIFY_CLIENT_ID');
+            $clientSecret = env('SPOTIFY_CLIENT_SECRET');
 
             if (!$clientId || !$clientSecret) {
-                Log::error('Credenciais da API do Spotify não encontradas no .env ou no arquivo de configuração.');
+                Log::error('Credenciais da API do Spotify não encontradas no .env.');
                 return null;
             }
 
@@ -157,7 +143,6 @@ class FormController extends Controller
 
     public function contactPage()
     {
-        // Lógica para a página de contato, se houver
         return view('admin.forms.contactPage');
     }
 }
