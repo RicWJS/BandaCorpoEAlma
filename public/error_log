@@ -1,0 +1,16 @@
+[18-Sep-2025 00:48:35 UTC] PHP Fatal error:  Uncaught Error: Class "Artisan" not found in /home/bandacorp/public_html/public/test.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/bandacorp/public_html/public/test.php on line 3
+[18-Sep-2025 00:48:56 UTC] PHP Fatal error:  Uncaught Error: Class "Artisan" not found in /home/bandacorp/public_html/public/test.php:3
+Stack trace:
+#0 {main}
+  thrown in /home/bandacorp/public_html/public/test.php on line 3
+[18-Sep-2025 00:50:17 UTC] PHP Fatal error:  Uncaught Error: Class "Artisan" not found in /home/bandacorp/public_html/public/index.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/bandacorp/public_html/public/index.php on line 15
+[18-Sep-2025 00:51:07 UTC] PHP Fatal error:  Uncaught Error: Class "Artisan" not found in /home/bandacorp/public_html/public/index.php:15
+Stack trace:
+#0 {main}
+  thrown in /home/bandacorp/public_html/public/index.php on line 15

@@ -22,7 +22,7 @@ body {
   line-height: 1.6;
   color: var(--color-secondary-text);
   background-color: var(--color-background);
-  background-image: url('/public/images/body-bg-4.jpg');
+  background-image: url('/laravel/public/images/body-bg-4.jpg');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center top;

@@ -16,6 +16,12 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsController;
 use App\Http\Controllers\ContactController;
 
+//Artisan::call('config:clear');
+//Artisan::call('cache:clear');
+//Artisan::call('route:clear');
+//Artisan::call('view:clear');
+
+//exit;
 
 /*
 |--------------------------------------------------------------------------

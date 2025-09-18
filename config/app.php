@@ -52,7 +52,7 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'https://bandacorpoealma.com.br/laravel'),
+    'url' => env('APP_URL', 'https://bandacorpoealma.com.br'),
 
     /*
     |--------------------------------------------------------------------------
@@ -97,7 +97,7 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
-    'key' => env('APP_KEY', 'base64:Z2ZoOWtxaWhzaGFjbnVmczViNG95enVqdmVicmdhamY='),
+    'key' => env('APP_KEY', 'base64:OWN3bXJpcHg0em1mYmNvcHNrenpzcGRka3lmN2Y2dW8='),
 
     'previous_keys' => [
         ...array_filter(

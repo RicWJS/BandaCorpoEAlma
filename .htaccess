@@ -12,5 +12,5 @@ Require all denied
 </Files>
 
 <IfModule mod_alias.c>
-RedirectMatch 301 ^/laravel/$ https://bandacorpoealma.com.br/laravel/public
+RedirectMatch 301 ^/$ https://bandacorpoealma.com.br/public
 </IfModule>
