@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http/Controllers\Admin;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\BannerSection;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class FormController extends Controller
 {
-    // --- MÉTODOS PARA BANNER SECTION (sem alterações) ---
+    // --- MÉTODOS PARA BANNER SECTION ---
     public function bannerSection()
     {
         $bannerSection = BannerSection::first();
@@ -58,7 +58,7 @@ class FormController extends Controller
         $coverImageUrl = $this->getSpotifyCoverFromInput($spotifyInput);
 
         if (!$coverImageUrl) {
-            return redirect()->back()->with('error', 'Não foi possível obter a capa do Spotify. Verifique o link ou código de embed e se suas credenciais da API estão corretas.');
+            return redirect()->back()->with('error', 'Não foi possível obter a capa do Spotify. Verifique o link/código e se suas credenciais da API estão corretas.');
         }
 
         SpotifySection::updateOrCreate(
@@ -73,19 +73,21 @@ class FormController extends Controller
     }
 
 
-    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY (COM URLs CORRIGIDAS) ---
+    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY ---
     private function getSpotifyCoverFromInput(?string $input): ?string
     {
-        if (empty($input)) return null;
+        if (empty($input)) {
+            return null;
+        }
 
         $accessToken = $this->getSpotifyAccessToken();
-        if (!$accessToken) return null;
+        if (!$accessToken) {
+            return null;
+        }
 
         // Tenta identificar se é um link de MÚSICA (track)
-        preg_match('/\/track\/([a-zA-Z0-9]+)/', $input, $trackMatches);
-        if (!empty($trackMatches[1])) {
+        if (preg_match('/\/track\/([a-zA-Z0-9]+)/', $input, $trackMatches)) {
             $trackId = $trackMatches[1];
-            // URL CORRIGIDA
             $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$trackId}");
             
             if ($response->successful() && !empty($response->json()['album']['images'][0]['url'])) {
@@ -94,10 +96,8 @@ class FormController extends Controller
         }
 
         // Tenta identificar se é um link de ARTISTA (artist)
-        preg_match('/\/artist\/([a-zA-Z0-9]+)/', $input, $artistMatches);
-        if (!empty($artistMatches[1])) {
+        if (preg_match('/\/artist\/([a-zA-Z0-9]+)/', $input, $artistMatches)) {
             $artistId = $artistMatches[1];
-            // URL CORRIGIDA
             $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/artists/{$artistId}/albums", [
                 'limit' => 1,
                 'include_groups' => 'album,single',
@@ -123,7 +123,6 @@ class FormController extends Controller
                 return null;
             }
 
-            // URL DE AUTENTICAÇÃO CORRIGIDA
             $response = Http::asForm()->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode($clientId . ':' . $clientSecret),
             ])->post('https://accounts.spotify.com/api/token', [
