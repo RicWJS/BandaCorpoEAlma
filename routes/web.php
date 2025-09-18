@@ -62,36 +62,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/phpinfo', function () {
             phpinfo();
         });
-
-        // Artisan Clear Cache
-        Route::get('/artisan/clear', function () {
-            // Artisan::call('cache:clear');
-            Artisan::call('route:clear');
-            // Artisan::call('view:clear');
-
-            return response()->json(['message' => 'Cache limpo com sucesso.']);
-        });
-
-        // Artisan Migrate
-        Route::get('/artisan/migrate', function () {
-            Artisan::call('migrate');
-
-            return response()->json(['message' => 'Migrate executado com sucesso.']);
-        });
-
-        // Artisan storage link
-        Route::get('/artisan/storage-link', function () {
-            Artisan::call('storage:link');
-
-            return response()->json(['message' => 'Comando Artisan executado com sucesso.']);
-        });
-
-        // Artisan any
-        Route::get('/artisan/any', function () {
-            Artisan::call('vendor:publish --tag=laravel-pagination --force');
-
-            return response()->json(['message' => 'Comando Artisan executado com sucesso.']);
-        });
     });
 });
 
