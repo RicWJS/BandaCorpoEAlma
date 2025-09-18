@@ -1,5 +1,4 @@
 # To prevent access to .env and other files
-
 <Files .\*>
     # Apache 2.2
     <IfModule !mod_authz_core.c>
@@ -14,5 +13,5 @@
 </Files>
 
 <IfModule mod_alias.c>
-RedirectMatch 301 ^/$ https://bandacorpoealma.com.br/public
+    RedirectMatch 301 ^/$ https://bandacorpoealma.com.br/public
 </IfModule>
