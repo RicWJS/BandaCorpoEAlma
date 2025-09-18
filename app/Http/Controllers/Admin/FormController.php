@@ -58,7 +58,7 @@ class FormController extends Controller
         $coverImageUrl = $this->getSpotifyCoverFromInput($spotifyInput);
 
         if (!$coverImageUrl) {
-            return redirect()->back()->with('error', 'Não foi possível obter a capa do Spotify. Verifique o link/código e se suas credenciais da API estão corretas.');
+            return redirect()->back()->with('error', 'Não foi possível obter a imagem do Spotify. Verifique o link/código e se suas credenciais da API estão corretas.');
         }
 
         SpotifySection::updateOrCreate(
@@ -85,7 +85,7 @@ class FormController extends Controller
             return null;
         }
 
-        // Tenta identificar se é um link de MÚSICA (track)
+        // Caso 1: O link é de uma MÚSICA (track)
         if (preg_match('/\/track\/([a-zA-Z0-9]+)/', $input, $trackMatches)) {
             $trackId = $trackMatches[1];
             $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$trackId}");
@@ -95,19 +95,18 @@ class FormController extends Controller
             }
         }
 
-        // Tenta identificar se é um link de ARTISTA (artist)
+        // Caso 2: O link é de um ARTISTA (artist)
         if (preg_match('/\/artist\/([a-zA-Z0-9]+)/', $input, $artistMatches)) {
             $artistId = $artistMatches[1];
-            // CORREÇÃO: Busca os dados do perfil do artista, não os seus álbuns.
-            $response = Http::withToken($accessToken)->get("accounts.spotify.com{$artistId}");
+            // Faz a chamada para o endpoint de Artista para pegar a imagem de perfil
+            $response = Http::withToken($accessToken)->get("https://open.spotify.com/oembed?url=0{$artistId}");
 
-            // A imagem principal do artista está diretamente no array 'images' da resposta.
             if ($response->successful() && !empty($response->json()['images'][0]['url'])) {
                 return $response->json()['images'][0]['url'];
             }
         }
 
-        Log::error('Spotify API: Falha final ao processar o input.', ['input' => $input]);
+        Log::error('Spotify API: Não foi possível extrair um ID de música ou artista válido.', ['input' => $input]);
         return null;
     }
 
