@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class FormController extends Controller
 {
-    // --- MÉTODOS PARA BANNER SECTION ---
+    // --- MÉTODOS PARA BANNER SECTION (sem alterações) ---
     public function bannerSection()
     {
         $bannerSection = BannerSection::first();
@@ -73,7 +73,7 @@ class FormController extends Controller
     }
 
 
-    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY ---
+    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY (LÓGICA FINAL) ---
     private function getSpotifyCoverFromInput(?string $input): ?string
     {
         if (empty($input)) {
@@ -85,7 +85,7 @@ class FormController extends Controller
             return null;
         }
 
-        // Tenta identificar se é um link de MÚSICA (track)
+        // Caso 1: O link é de uma MÚSICA (track)
         if (preg_match('/\/track\/([a-zA-Z0-9]+)/', $input, $trackMatches)) {
             $trackId = $trackMatches[1];
             $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$trackId}");
@@ -95,20 +95,19 @@ class FormController extends Controller
             }
         }
 
-        // Tenta identificar se é um link de ARTISTA (artist)
+        // Caso 2: O link é de um ARTISTA (artist)
         if (preg_match('/\/artist\/([a-zA-Z0-9]+)/', $input, $artistMatches)) {
             $artistId = $artistMatches[1];
-            $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/artists/{$artistId}/albums", [
-                'limit' => 1,
-                'include_groups' => 'album,single',
-            ]);
+            // Usa o endpoint correto para buscar os dados do artista
+            $response = Http::withToken($accessToken)->get("https://open.spotify.com/oembed?url=1{$artistId}");
 
-            if ($response->successful() && !empty($response->json()['items'][0]['images'][0]['url'])) {
-                return $response->json()['items'][0]['images'][0]['url'];
+            // A imagem do artista vem diretamente no campo 'images'
+            if ($response->successful() && !empty($response->json()['images'][0]['url'])) {
+                return $response->json()['images'][0]['url'];
             }
         }
 
-        Log::error('Spotify API: Falha final ao processar o input.', ['input' => $input]);
+        Log::error('Spotify API: Não foi possível processar o input como link de música ou artista.', ['input' => $input]);
         return null;
     }
 
