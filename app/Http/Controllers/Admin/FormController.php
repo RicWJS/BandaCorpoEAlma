@@ -73,7 +73,7 @@ class FormController extends Controller
     }
 
 
-    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY (LÓGICA FINAL) ---
+    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY ---
     private function getSpotifyCoverFromInput(?string $input): ?string
     {
         if (empty($input)) {
@@ -85,7 +85,7 @@ class FormController extends Controller
             return null;
         }
 
-        // Caso 1: O link é de uma MÚSICA (track)
+        // Tenta identificar se é um link de MÚSICA (track)
         if (preg_match('/\/track\/([a-zA-Z0-9]+)/', $input, $trackMatches)) {
             $trackId = $trackMatches[1];
             $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$trackId}");
@@ -95,19 +95,19 @@ class FormController extends Controller
             }
         }
 
-        // Caso 2: O link é de um ARTISTA (artist)
+        // Tenta identificar se é um link de ARTISTA (artist)
         if (preg_match('/\/artist\/([a-zA-Z0-9]+)/', $input, $artistMatches)) {
             $artistId = $artistMatches[1];
-            // Usa o endpoint correto para buscar os dados do artista
-            $response = Http::withToken($accessToken)->get("https://open.spotify.com/oembed?url=1{$artistId}");
+            // CORREÇÃO: Busca os dados do perfil do artista, não os seus álbuns.
+            $response = Http::withToken($accessToken)->get("accounts.spotify.com{$artistId}");
 
-            // A imagem do artista vem diretamente no campo 'images'
+            // A imagem principal do artista está diretamente no array 'images' da resposta.
             if ($response->successful() && !empty($response->json()['images'][0]['url'])) {
                 return $response->json()['images'][0]['url'];
             }
         }
 
-        Log::error('Spotify API: Não foi possível processar o input como link de música ou artista.', ['input' => $input]);
+        Log::error('Spotify API: Falha final ao processar o input.', ['input' => $input]);
         return null;
     }
 
