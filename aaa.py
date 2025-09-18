@@ -23,8 +23,8 @@ def should_skip_file(file_path):
         
     return False
 
-def add_blank_line_to_file(file_path):
-    """Adiciona uma linha em branco no final do arquivo se não terminar com \n"""
+def remove_trailing_blank_lines(file_path):
+    """Remove linhas em branco do final do arquivo"""
     try:
         with open(file_path, 'rb') as f:
             content = f.read()
@@ -32,16 +32,18 @@ def add_blank_line_to_file(file_path):
         # Se arquivo está vazio, não faz nada
         if not content:
             return False
-            
-        # Se já termina com \n, não precisa adicionar
-        if content.endswith(b'\n'):
-            return False
-            
-        # Adiciona a linha em branco
-        with open(file_path, 'ab') as f:
-            f.write(b'\n')
         
-        return True
+        # Remove quebras de linha do final
+        original_length = len(content)
+        content = content.rstrip(b'\n')
+        
+        # Se removeu algo, reescreve o arquivo
+        if len(content) < original_length:
+            with open(file_path, 'wb') as f:
+                f.write(content)
+            return True
+            
+        return False
         
     except (PermissionError, UnicodeDecodeError, OSError) as e:
         print(f"Erro ao processar {file_path}: {e}")
@@ -51,32 +53,30 @@ def main():
     current_dir = Path('.')
     modified_files = []
     
-    print("🔧 Iniciando gambiarra: adicionando linhas em branco...")
+    print("🔧 Iniciando limpeza: removendo linhas em branco do final...")
     print("=" * 50)
     
     for file_path in current_dir.rglob('*'):
         if file_path.is_file() and not should_skip_file(file_path):
-            if add_blank_line_to_file(file_path):
+            if remove_trailing_blank_lines(file_path):
                 modified_files.append(str(file_path))
-                print(f"✅ Modificado: {file_path}")
+                print(f"✅ Limpo: {file_path}")
     
     print("=" * 50)
-    print(f"🎉 Gambiarra concluída!")
-    print(f"📊 Total de arquivos modificados: {len(modified_files)}")
+    print(f"🎉 Limpeza concluída!")
+    print(f"📊 Total de arquivos processados: {len(modified_files)}")
     
     if modified_files:
-        print("\n📝 Arquivos que foram modificados:")
+        print("\n📝 Arquivos que foram limpos:")
         for file in modified_files:
             print(f"   - {file}")
         
         print("\n💡 Agora você pode fazer:")
         print("   git add .")
-        print('   git commit -m "Formatação: adicionar quebras de linha"')
+        print('   git commit -m "Limpeza: remover quebras de linha extras"')
         print("   git push")
-        
-        print("\n⚠️  Lembre-se de executar 'remove_blank_lines.py' depois!")
     else:
-        print("\n📋 Nenhum arquivo precisou ser modificado.")
+        print("\n📋 Nenhum arquivo precisou ser limpo.")
 
 if __name__ == "__main__":
     main()
