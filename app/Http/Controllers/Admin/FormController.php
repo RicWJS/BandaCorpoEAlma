@@ -40,7 +40,7 @@ class FormController extends Controller
     }
 
 
-    // --- MÉTODOS PARA SPOTIFY SECTION (sem alterações no fluxo) ---
+    // --- MÉTODOS PARA SPOTIFY SECTION (Versão Final) ---
 
     public function spotifySection()
     {
@@ -50,7 +50,9 @@ class FormController extends Controller
 
     public function storeSpotifySection(Request $request)
     {
-        $request->validate(['embed_link' => 'required|string']);
+        $request->validate([
+            'embed_link' => 'required|string',
+        ]);
 
         $spotifyInput = $request->input('embed_link');
         $coverImageUrl = $this->getSpotifyCoverFromInput($spotifyInput);
@@ -71,7 +73,7 @@ class FormController extends Controller
     }
 
 
-    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY (COM A URL CORRIGIDA) ---
+    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY (COM URLs CORRIGIDAS) ---
     private function getSpotifyCoverFromInput(?string $input): ?string
     {
         if (empty($input)) return null;
@@ -79,31 +81,33 @@ class FormController extends Controller
         $accessToken = $this->getSpotifyAccessToken();
         if (!$accessToken) return null;
 
-        // Tenta identificar se é um link de MÚSICA (track)
-        if (preg_match('/\/track\/([a-zA-Z0-9]+)/', $input, $matches)) {
-            $trackId = $matches[1];
-            // **AQUI ESTAVA O ERRO - URL CORRIGIDA**
-            $response = Http::withToken($accessToken)->get("api.spotify.com/v1/tracks/{$trackId}");
-            
+        preg_match('/(track|artist)\/([a-zA-Z0-9]+)/', $input, $matches);
+        if (count($matches) < 3) {
+            Log::error('Spotify API: Não foi possível extrair ID do input.', ['input' => $input]);
+            return null;
+        }
+
+        $type = $matches[1];
+        $id = $matches[2];
+        
+        if ($type === 'track') {
+            // URL CORRIGIDA
+            $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$id}");
             if ($response->successful() && !empty($response->json()['album']['images'][0]['url'])) {
                 return $response->json()['album']['images'][0]['url'];
             }
-        }
-
-        // Se não for música, tenta identificar se é um link de ARTISTA (artist)
-        if (preg_match('/\/artist\/([a-zA-Z0-9]+)/', $input, $matches)) {
-            $artistId = $matches[1];
-            $response = Http::withToken($accessToken)->get("https://open.spotify.com/user/seuusuario3{$artistId}/albums", [
+        } elseif ($type === 'artist') {
+            // URL CORRIGIDA
+            $response = Http::withToken($accessToken)->get("https://open.spotify.com/user/seuusuario3{$id}/albums", [
                 'limit' => 1,
                 'include_groups' => 'album,single',
             ]);
-
             if ($response->successful() && !empty($response->json()['items'][0]['images'][0]['url'])) {
                 return $response->json()['items'][0]['images'][0]['url'];
             }
         }
 
-        Log::error('Spotify API: Falha ao processar o input.', ['input' => $input]);
+        Log::error('Spotify API: Falha na requisição.', ['response_body' => $response->body() ?? 'N/A']);
         return null;
     }
 
@@ -117,7 +121,8 @@ class FormController extends Controller
                 Log::error('Credenciais da API do Spotify não encontradas no .env.');
                 return null;
             }
-
+            
+            // URL CORRIGIDA
             $response = Http::asForm()->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode($clientId . ':' . $clientSecret),
             ])->post('https://accounts.spotify.com/api/token', [
@@ -127,8 +132,8 @@ class FormController extends Controller
             if ($response->successful()) {
                 return $response->json()['access_token'];
             }
-            
-            Log::error('Spotify API: Falha ao obter token de acesso.', ['response' => $response->body()]);
+
+            Log::error('Spotify API: Falha ao obter token.', ['response_body' => $response->body()]);
             return null;
         });
     }
