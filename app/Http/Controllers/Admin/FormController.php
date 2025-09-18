@@ -73,7 +73,7 @@ class FormController extends Controller
     }
 
 
-    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY (COM AUMENTO DE TIMEOUT) ---
+    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY (COM CORREÇÃO PARA ARTISTAS) ---
     private function getSpotifyCoverFromInput(?string $input): ?string
     {
         if (empty($input)) {
@@ -82,32 +82,129 @@ class FormController extends Controller
 
         $accessToken = $this->getSpotifyAccessToken();
         if (!$accessToken) {
+            Log::error('Spotify API: Não foi possível obter o token de acesso.');
             return null;
         }
 
         // Caso 1: O link é de uma MÚSICA (track)
-        if (preg_match('/\/track\/([a-zA-Z0-B]+)/', $input, $trackMatches)) {
+        if (preg_match('/\/track\/([a-zA-Z0-9]+)/', $input, $trackMatches)) {
             $trackId = $trackMatches[1];
-            // AUMENTANDO O TIMEOUT PARA 30 SEGUNDOS
-            $response = Http::withToken($accessToken)->timeout(30)->get("https://api.spotify.com/v1/tracks/{$trackId}");
             
-            if ($response->successful() && !empty($response->json()['album']['images'][0]['url'])) {
-                return $response->json()['album']['images'][0]['url'];
+            try {
+                $response = Http::withToken($accessToken)
+                    ->timeout(30)
+                    ->get("https://api.spotify.com/v1/tracks/{$trackId}");
+                
+                if ($response->successful()) {
+                    $data = $response->json();
+                    if (!empty($data['album']['images'][0]['url'])) {
+                        return $data['album']['images'][0]['url'];
+                    }
+                }
+                
+                Log::error('Spotify API: Erro ao buscar track', [
+                    'trackId' => $trackId,
+                    'status' => $response->status(),
+                    'response' => $response->body()
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Spotify API: Exceção ao buscar track', [
+                    'trackId' => $trackId,
+                    'error' => $e->getMessage()
+                ]);
             }
         }
 
         // Caso 2: O link é de um ARTISTA (artist)
-        if (preg_match('/\/artist\/([a-zA-Z0-B]+)/', $input, $artistMatches)) {
+        if (preg_match('/\/artist\/([a-zA-Z0-9]+)/', $input, $artistMatches)) {
             $artistId = $artistMatches[1];
-            // AUMENTANDO O TIMEOUT PARA 30 SEGUNDOS
-            $response = Http::withToken($accessToken)->timeout(30)->get("https://open.spotify.com/oembed?url=0{$artistId}");
+            
+            try {
+                // CORREÇÃO: Usando a API correta para artistas
+                $response = Http::withToken($accessToken)
+                    ->timeout(30)
+                    ->get("https://api.spotify.com/v1/artists/{$artistId}");
 
-            if ($response->successful() && !empty($response->json()['images'][0]['url'])) {
-                return $response->json()['images'][0]['url'];
+                if ($response->successful()) {
+                    $data = $response->json();
+                    if (!empty($data['images'][0]['url'])) {
+                        // Retorna a primeira imagem (geralmente a maior)
+                        return $data['images'][0]['url'];
+                    }
+                }
+                
+                Log::error('Spotify API: Erro ao buscar artista', [
+                    'artistId' => $artistId,
+                    'status' => $response->status(),
+                    'response' => $response->body()
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Spotify API: Exceção ao buscar artista', [
+                    'artistId' => $artistId,
+                    'error' => $e->getMessage()
+                ]);
             }
         }
 
-        Log::error('Spotify API: Não foi possível extrair um ID de música ou artista válido.', ['input' => $input]);
+        // Caso 3: O link é de um ÁLBUM (album)
+        if (preg_match('/\/album\/([a-zA-Z0-9]+)/', $input, $albumMatches)) {
+            $albumId = $albumMatches[1];
+            
+            try {
+                $response = Http::withToken($accessToken)
+                    ->timeout(30)
+                    ->get("https://api.spotify.com/v1/albums/{$albumId}");
+                
+                if ($response->successful()) {
+                    $data = $response->json();
+                    if (!empty($data['images'][0]['url'])) {
+                        return $data['images'][0]['url'];
+                    }
+                }
+                
+                Log::error('Spotify API: Erro ao buscar álbum', [
+                    'albumId' => $albumId,
+                    'status' => $response->status(),
+                    'response' => $response->body()
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Spotify API: Exceção ao buscar álbum', [
+                    'albumId' => $albumId,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        // Caso 4: O link é de uma PLAYLIST
+        if (preg_match('/\/playlist\/([a-zA-Z0-9]+)/', $input, $playlistMatches)) {
+            $playlistId = $playlistMatches[1];
+            
+            try {
+                $response = Http::withToken($accessToken)
+                    ->timeout(30)
+                    ->get("https://api.spotify.com/v1/playlists/{$playlistId}");
+                
+                if ($response->successful()) {
+                    $data = $response->json();
+                    if (!empty($data['images'][0]['url'])) {
+                        return $data['images'][0]['url'];
+                    }
+                }
+                
+                Log::error('Spotify API: Erro ao buscar playlist', [
+                    'playlistId' => $playlistId,
+                    'status' => $response->status(),
+                    'response' => $response->body()
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Spotify API: Exceção ao buscar playlist', [
+                    'playlistId' => $playlistId,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        Log::error('Spotify API: Não foi possível extrair um ID válido.', ['input' => $input]);
         return null;
     }
 
@@ -122,18 +219,30 @@ class FormController extends Controller
                 return null;
             }
 
-            // AUMENTANDO O TIMEOUT PARA 30 SEGUNDOS
-            $response = Http::asForm()->timeout(30)->withHeaders([
-                'Authorization' => 'Basic ' . base64_encode($clientId . ':' . $clientSecret),
-            ])->post('https://accounts.spotify.com/api/token', [
-                'grant_type' => 'client_credentials',
-            ]);
+            try {
+                $response = Http::asForm()
+                    ->timeout(30)
+                    ->withHeaders([
+                        'Authorization' => 'Basic ' . base64_encode($clientId . ':' . $clientSecret),
+                    ])
+                    ->post('https://accounts.spotify.com/api/token', [
+                        'grant_type' => 'client_credentials',
+                    ]);
 
-            if ($response->successful()) {
-                return $response->json()['access_token'];
+                if ($response->successful()) {
+                    return $response->json()['access_token'];
+                }
+                
+                Log::error('Spotify API: Falha ao obter token de acesso.', [
+                    'status' => $response->status(),
+                    'response' => $response->body()
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Spotify API: Exceção ao obter token de acesso', [
+                    'error' => $e->getMessage()
+                ]);
             }
             
-            Log::error('Spotify API: Falha ao obter token de acesso.', ['response_body' => $response->body()]);
             return null;
         });
     }
