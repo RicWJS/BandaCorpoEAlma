@@ -32,12 +32,12 @@
 
             <div class="form-group">
                 <label for="title">Título</label>
-                <input type="text" id="title" name="title" class="form-control" value="{{ old('title', $bannerSection->title ?? '') }}" placeholder="Ex: Novo Single Disponível Agora" required>
+                <input type="text" id="title" name="title" class="form-control" value="{{ old('title', $banner->title ?? '') }}" placeholder="Ex: Novo Single Disponível Agora" required>
             </div>
 
             <div class="form-group">
                 <label for="excerpt">Texto de Introdução</label>
-                <textarea id="excerpt" name="excerpt" class="form-control" rows="4" placeholder="Descreva brevemente a novidade ou chamada para ação...">{{ old('excerpt', $bannerSection->excerpt ?? '') }}</textarea>
+                <textarea id="excerpt" name="excerpt" class="form-control" rows="4" placeholder="Descreva brevemente a novidade ou chamada para ação...">{{ old('excerpt', $banner->excerpt ?? '') }}</textarea>
             </div>
 
             <div class="form-group">
@@ -52,30 +52,30 @@
                 <p class="form-text">Recomendação: Imagens no formato paisagem (1920x1080px) para melhor visualização.</p>
 
                 {{-- Preview da Imagem Atual --}}
-                @if ($bannerSection && $bannerSection->image_path)
+                @if ($banner && $banner->image_path)
                     <div class="image-preview">
                         <p class="preview-label">Imagem Atual:</p>
-                        <img src="{{ asset('storage/' . $bannerSection->image_path) }}" alt="Banner Atual">
+                        <img src="{{ asset('storage/' . $banner->image_path) }}" alt="Banner Atual">
                     </div>
                 @endif
             </div>
 
             <div class="form-group">
                 <label for="youtube_link">Link do YouTube</label>
-                <input type="url" id="youtube_link" name="youtube_link" class="form-control" value="{{ old('youtube_link', $bannerSection->youtube_link ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
+                <input type="url" id="youtube_link" name="youtube_link" class="form-control" value="{{ old('youtube_link', $banner->youtube_link ?? '') }}" placeholder="https://www.youtube.com/watch?v=...">
                 <p class="form-text">Opcional.</p>
             </div>
 
             <div class="form-group">
                 <label for="spotify_link">Link do Spotify</label>
-                <input type="url" id="spotify_link" name="spotify_link" class="form-control" value="{{ old('spotify_link', $bannerSection->spotify_link ?? '') }}" placeholder="https://open.spotify.com/track/...">
+                <input type="url" id="spotify_link" name="spotify_link" class="form-control" value="{{ old('spotify_link', $banner->spotify_link ?? '') }}" placeholder="https://open.spotify.com/track/...">
                 <p class="form-text">Opcional.</p>
             </div>
 
             {{-- NOVO CAMPO: Link Saiba Mais --}}
             <div class="form-group">
                 <label for="learn_more_link">Link "Saiba Mais"</label>
-                <input type="url" id="learn_more_link" name="learn_more_link" class="form-control" value="{{ old('learn_more_link', $bannerSection->learn_more_link ?? '') }}" placeholder="http://seusite.com/saiba-mais...">
+                <input type="url" id="learn_more_link" name="learn_more_link" class="form-control" value="{{ old('learn_more_link', $banner->learn_more_link ?? '') }}" placeholder="http://seusite.com/saiba-mais...">
                 <p class="form-text">Opcional: Um link para uma página com mais detalhes.</p>
             </div>
 
