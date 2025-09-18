@@ -1,6 +1,5 @@
+{{-- laravel\resources\views\admin\forms\spotifySection.blade.php --}}
 @extends('admin.layouts.app')
-
-@section('title', 'Editar Seção Spotify')
 
 @section('content')
 <div class="container">
