@@ -33,7 +33,7 @@ class FormController extends Controller
     public function bannerSection()
     {
         $bannerSection = BannerSection::first();
-        return view('admin.forms.bannerSection', compact('bannerSection'));
+        return view('admin.forms.bannerSection', compact('banner'));
     }
 
     public function storeBannerSection(Request $request)
