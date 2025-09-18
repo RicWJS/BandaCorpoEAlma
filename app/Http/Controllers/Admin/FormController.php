@@ -32,7 +32,7 @@ class FormController extends Controller
     // --- MÉTODOS PARA BANNER SECTION (sem alterações) ---
     public function bannerSection()
     {
-        $bannerSection = BannerSection::first();
+        $banner = BannerSection::first();
         return view('admin.forms.bannerSection', compact('banner'));
     }
 
