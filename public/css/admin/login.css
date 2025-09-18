@@ -1,0 +1,106 @@
+/* public\css\admin\login.css */
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+  background-color: #1a1d24;
+}
+
+.login-card {
+  background-color: #22262e;
+  padding: 40px;
+  border-radius: 8px;
+  border: 1px solid #3f4550;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.login-header h1 {
+  color: #4a90e2;
+  margin: 0 0 10px 0;
+  font-size: 2em;
+}
+
+.login-header p {
+  color: #d0d2d6;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.login-form .form-group {
+  margin-bottom: 20px;
+}
+
+.login-form .form-group label {
+  display: block;
+  color: #d0d2d6;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.login-form .form-group .form-control {
+  width: 100%;
+  padding: 12px 15px;
+  background-color: #22262e;
+  border: 1px solid #3f4550;
+  border-radius: 5px;
+  color: #d0d2d6;
+  font-size: 1em;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  box-sizing: border-box;
+}
+
+.login-form .form-group .form-control:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+}
+
+.login-form .form-group .form-control.error {
+  border-color: #dc3545;
+}
+
+.login-form .form-group .form-error {
+  color: #dc3545;
+  font-size: 0.85em;
+  margin-top: 5px;
+  display: block;
+}
+
+.login-form .btn-login {
+  width: 100%;
+  padding: 15px;
+  background-color: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 10px;
+}
+
+.login-form .btn-login:hover {
+  background-color: #609de6;
+}
+
+.login-footer {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.login-footer small {
+  font-size: 0.8em;
+  color: #d0d2d6;
+  opacity: 0.6;
+}
