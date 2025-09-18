@@ -53,7 +53,7 @@ class FormController extends Controller
         }
         
         $bannerSection->title = $request->title;
-        $bannerSection->subtitle = $request->subtitle;
+        $bannerSection->subtitle = $request->excerpt;
         $bannerSection->learn_more_link = $request->learn_more_link;
         $bannerSection->save();
         
