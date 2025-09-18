@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http/Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\BannerSection;
@@ -40,7 +40,7 @@ class FormController extends Controller
     }
 
 
-    // --- MÉTODOS PARA SPOTIFY SECTION (Versão Final) ---
+    // --- MÉTODOS PARA SPOTIFY SECTION ---
 
     public function spotifySection()
     {
@@ -58,7 +58,7 @@ class FormController extends Controller
         $coverImageUrl = $this->getSpotifyCoverFromInput($spotifyInput);
 
         if (!$coverImageUrl) {
-            return redirect()->back()->with('error', 'Não foi possível obter a capa do Spotify. Verifique o link ou código de embed.');
+            return redirect()->back()->with('error', 'Não foi possível obter a capa do Spotify. Verifique o link ou código de embed e se suas credenciais da API estão corretas.');
         }
 
         SpotifySection::updateOrCreate(
@@ -81,33 +81,34 @@ class FormController extends Controller
         $accessToken = $this->getSpotifyAccessToken();
         if (!$accessToken) return null;
 
-        preg_match('/(track|artist)\/([a-zA-Z0-9]+)/', $input, $matches);
-        if (count($matches) < 3) {
-            Log::error('Spotify API: Não foi possível extrair ID do input.', ['input' => $input]);
-            return null;
-        }
-
-        $type = $matches[1];
-        $id = $matches[2];
-        
-        if ($type === 'track') {
+        // Tenta identificar se é um link de MÚSICA (track)
+        preg_match('/\/track\/([a-zA-Z0-9]+)/', $input, $trackMatches);
+        if (!empty($trackMatches[1])) {
+            $trackId = $trackMatches[1];
             // URL CORRIGIDA
-            $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$id}");
+            $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$trackId}");
+            
             if ($response->successful() && !empty($response->json()['album']['images'][0]['url'])) {
                 return $response->json()['album']['images'][0]['url'];
             }
-        } elseif ($type === 'artist') {
+        }
+
+        // Tenta identificar se é um link de ARTISTA (artist)
+        preg_match('/\/artist\/([a-zA-Z0-9]+)/', $input, $artistMatches);
+        if (!empty($artistMatches[1])) {
+            $artistId = $artistMatches[1];
             // URL CORRIGIDA
-            $response = Http::withToken($accessToken)->get("https://open.spotify.com/user/seuusuario3{$id}/albums", [
+            $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/artists/{$artistId}/albums", [
                 'limit' => 1,
                 'include_groups' => 'album,single',
             ]);
+
             if ($response->successful() && !empty($response->json()['items'][0]['images'][0]['url'])) {
                 return $response->json()['items'][0]['images'][0]['url'];
             }
         }
 
-        Log::error('Spotify API: Falha na requisição.', ['response_body' => $response->body() ?? 'N/A']);
+        Log::error('Spotify API: Falha final ao processar o input.', ['input' => $input]);
         return null;
     }
 
@@ -121,8 +122,8 @@ class FormController extends Controller
                 Log::error('Credenciais da API do Spotify não encontradas no .env.');
                 return null;
             }
-            
-            // URL CORRIGIDA
+
+            // URL DE AUTENTICAÇÃO CORRIGIDA
             $response = Http::asForm()->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode($clientId . ':' . $clientSecret),
             ])->post('https://accounts.spotify.com/api/token', [
@@ -132,8 +133,8 @@ class FormController extends Controller
             if ($response->successful()) {
                 return $response->json()['access_token'];
             }
-
-            Log::error('Spotify API: Falha ao obter token.', ['response_body' => $response->body()]);
+            
+            Log::error('Spotify API: Falha ao obter token de acesso.', ['response_body' => $response->body()]);
             return null;
         });
     }
