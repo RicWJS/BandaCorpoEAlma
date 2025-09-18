@@ -55,17 +55,20 @@ class FormController extends Controller
         ]);
 
         $spotifyInput = $request->input('embed_link');
-        $coverImageUrl = $this->getSpotifyCoverFromInput($spotifyInput);
+        
+        // A função agora retorna um array com o status e a mensagem/URL
+        $result = $this->getSpotifyCoverFromInput($spotifyInput);
 
-        if (!$coverImageUrl) {
-            return redirect()->back()->with('error', 'Não foi possível obter a imagem do Spotify. Verifique o link/código e se suas credenciais da API estão corretas.');
+        if (!$result['success']) {
+            // Se falhou, redireciona com a MENSAGEM DE ERRO REAL da API
+            return redirect()->back()->with('error', 'Erro da API do Spotify: ' . $result['message']);
         }
 
         SpotifySection::updateOrCreate(
             ['id' => 1],
             [
                 'embed_link' => $spotifyInput,
-                'cover_image_url' => $coverImageUrl,
+                'cover_image_url' => $result['url'],
             ]
         );
 
@@ -73,16 +76,16 @@ class FormController extends Controller
     }
 
 
-    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY ---
-    private function getSpotifyCoverFromInput(?string $input): ?string
+    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY (COM DEPURAÇÃO) ---
+    private function getSpotifyCoverFromInput(?string $input): array
     {
         if (empty($input)) {
-            return null;
+            return ['success' => false, 'message' => 'O campo de link estava vazio.'];
         }
 
         $accessToken = $this->getSpotifyAccessToken();
         if (!$accessToken) {
-            return null;
+            return ['success' => false, 'message' => 'Falha ao obter o token de acesso. Verifique as credenciais no .env.'];
         }
 
         // Caso 1: O link é de uma MÚSICA (track)
@@ -91,23 +94,24 @@ class FormController extends Controller
             $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$trackId}");
             
             if ($response->successful() && !empty($response->json()['album']['images'][0]['url'])) {
-                return $response->json()['album']['images'][0]['url'];
+                return ['success' => true, 'url' => $response->json()['album']['images'][0]['url']];
             }
+            return ['success' => false, 'message' => 'Falha ao buscar dados da música. Resposta: ' . $response->body()];
         }
 
         // Caso 2: O link é de um ARTISTA (artist)
         if (preg_match('/\/artist\/([a-zA-Z0-9]+)/', $input, $artistMatches)) {
             $artistId = $artistMatches[1];
-            // Faz a chamada para o endpoint de Artista para pegar a imagem de perfil
             $response = Http::withToken($accessToken)->get("https://open.spotify.com/oembed?url=0{$artistId}");
 
             if ($response->successful() && !empty($response->json()['images'][0]['url'])) {
-                return $response->json()['images'][0]['url'];
+                return ['success' => true, 'url' => $response->json()['images'][0]['url']];
             }
+            // Retorna o corpo da resposta de erro para depuração
+            return ['success' => false, 'message' => 'Falha ao buscar dados do artista. Resposta: ' . $response->body()];
         }
 
-        Log::error('Spotify API: Não foi possível extrair um ID de música ou artista válido.', ['input' => $input]);
-        return null;
+        return ['success' => false, 'message' => 'Não foi possível identificar um ID de música ou artista válido no link fornecido.'];
     }
 
     private function getSpotifyAccessToken(): ?string
@@ -115,23 +119,15 @@ class FormController extends Controller
         return Cache::remember('spotify_access_token', 3500, function () {
             $clientId = env('SPOTIFY_CLIENT_ID');
             $clientSecret = env('SPOTIFY_CLIENT_SECRET');
-
-            if (!$clientId || !$clientSecret) {
-                Log::error('Credenciais da API do Spotify não encontradas no .env.');
-                return null;
-            }
+            if (!$clientId || !$clientSecret) return null;
 
             $response = Http::asForm()->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode($clientId . ':' . $clientSecret),
-            ])->post('https://accounts.spotify.com/api/token', [
-                'grant_type' => 'client_credentials',
-            ]);
+            ])->post('https://accounts.spotify.com/api/token', ['grant_type' => 'client_credentials']);
 
             if ($response->successful()) {
                 return $response->json()['access_token'];
             }
-            
-            Log::error('Spotify API: Falha ao obter token de acesso.', ['response_body' => $response->body()]);
             return null;
         });
     }
