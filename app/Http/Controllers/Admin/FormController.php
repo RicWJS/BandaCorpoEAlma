@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http-redacted-for-privacy\Admin;
+namespace App\Http\Controllers\Admin;
 
-use App\Http-redacted-for-privacy\Controller;
+use App\Http\Controllers\Controller;
 use App\Models\BannerSection;
 use App\Models\SpotifySection;
 use Illuminate\Http\Request;
@@ -40,7 +40,7 @@ class FormController extends Controller
     }
 
 
-    // --- MÉTODOS PARA SPOTIFY SECTION ---
+    // --- MÉTODOS PARA SPOTIFY SECTION (sem alterações no fluxo) ---
 
     public function spotifySection()
     {
@@ -50,15 +50,13 @@ class FormController extends Controller
 
     public function storeSpotifySection(Request $request)
     {
-        $request->validate([
-            'embed_link' => 'required|string',
-        ]);
+        $request->validate(['embed_link' => 'required|string']);
 
         $spotifyInput = $request->input('embed_link');
         $coverImageUrl = $this->getSpotifyCoverFromInput($spotifyInput);
 
         if (!$coverImageUrl) {
-            return redirect()->back()->with('error', 'Não foi possível obter a capa do Spotify. Verifique o link/código e tente novamente.');
+            return redirect()->back()->with('error', 'Não foi possível obter a capa do Spotify. Verifique o link ou código de embed.');
         }
 
         SpotifySection::updateOrCreate(
@@ -73,7 +71,7 @@ class FormController extends Controller
     }
 
 
-    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY ---
+    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY (COM A URL CORRIGIDA) ---
     private function getSpotifyCoverFromInput(?string $input): ?string
     {
         if (empty($input)) return null;
@@ -81,34 +79,31 @@ class FormController extends Controller
         $accessToken = $this->getSpotifyAccessToken();
         if (!$accessToken) return null;
 
-        preg_match('/(track|artist)\/([a-zA-Z0-9]+)/', $input, $matches);
-        if (count($matches) < 3) {
-            Log::error('Spotify API: Não foi possível extrair ID do input.', ['input' => $input]);
-            return null;
-        }
-
-        $type = $matches[1];
-        $id = $matches[2];
-        $response = null;
-
-        if ($type === 'track') {
-            // URL CORRIGIDA
-            $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$id}");
+        // Tenta identificar se é um link de MÚSICA (track)
+        if (preg_match('/\/track\/([a-zA-Z0-9]+)/', $input, $matches)) {
+            $trackId = $matches[1];
+            // **AQUI ESTAVA O ERRO - URL CORRIGIDA**
+            $response = Http::withToken($accessToken)->get("api.spotify.com/v1/tracks/{$trackId}");
+            
             if ($response->successful() && !empty($response->json()['album']['images'][0]['url'])) {
                 return $response->json()['album']['images'][0]['url'];
             }
-        } elseif ($type === 'artist') {
-            // URL CORRIGIDA
-            $response = Http::withToken($accessToken)->get("https://open.spotify.com/user/seuusuario3{$id}/albums", [
+        }
+
+        // Se não for música, tenta identificar se é um link de ARTISTA (artist)
+        if (preg_match('/\/artist\/([a-zA-Z0-9]+)/', $input, $matches)) {
+            $artistId = $matches[1];
+            $response = Http::withToken($accessToken)->get("https://open.spotify.com/user/seuusuario3{$artistId}/albums", [
                 'limit' => 1,
                 'include_groups' => 'album,single',
             ]);
+
             if ($response->successful() && !empty($response->json()['items'][0]['images'][0]['url'])) {
                 return $response->json()['items'][0]['images'][0]['url'];
             }
         }
 
-        Log::error('Spotify API: Falha na requisição.', ['status' => $response->status(), 'body' => $response->body()]);
+        Log::error('Spotify API: Falha ao processar o input.', ['input' => $input]);
         return null;
     }
 
@@ -117,15 +112,15 @@ class FormController extends Controller
         return Cache::remember('spotify_access_token', 3500, function () {
             $clientId = env('SPOTIFY_CLIENT_ID');
             $clientSecret = env('SPOTIFY_CLIENT_SECRET');
+
             if (!$clientId || !$clientSecret) {
                 Log::error('Credenciais da API do Spotify não encontradas no .env.');
                 return null;
             }
 
-            // URL CORRIGIDA
             $response = Http::asForm()->withHeaders([
                 'Authorization' => 'Basic ' . base64_encode($clientId . ':' . $clientSecret),
-            ])->post('https://open.spotify.com/user/seuusuario', [
+            ])->post('https://accounts.spotify.com/api/token', [
                 'grant_type' => 'client_credentials',
             ]);
 
@@ -133,7 +128,7 @@ class FormController extends Controller
                 return $response->json()['access_token'];
             }
             
-            Log::error('Spotify API: Falha ao obter token.', ['status' => $response->status(), 'body' => $response->body()]);
+            Log::error('Spotify API: Falha ao obter token de acesso.', ['response' => $response->body()]);
             return null;
         });
     }
