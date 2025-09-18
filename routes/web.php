@@ -3,6 +3,7 @@
 // routes/web.php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -93,3 +94,9 @@ Route::get('/facebook', function () {
 Route::get('/tiktok', function () {
     return redirect()->away('https://tiktok.com/@seuusuario');
 })->name('social.tiktok');
+
+
+Route::get('/run-migrations', function () {
+    Artisan::call('migrate');
+    return 'Migrations executed!';
+});

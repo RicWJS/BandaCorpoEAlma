@@ -3,96 +3,161 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-
-use App\Traits\ImageUploadTrait;
-
 use App\Models\BannerSection;
 use App\Models\SpotifySection;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FormController extends Controller
 {
-    use ImageUploadTrait;
+    // --- MÉTODOS PARA BANNER SECTION ---
 
     public function bannerSection()
     {
-        $banner = BannerSection::first();
-        return view('admin.forms.bannerSection', compact('banner'));
+        $bannerSection = BannerSection::first();
+        return view('admin.forms.bannerSection', compact('bannerSection'));
     }
 
     public function storeBannerSection(Request $request)
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'excerpt' => 'nullable|string',
-            'image' => 'nullable|image|max:32000',
-            'youtube_link' => 'nullable|url',
-            'spotify_link' => 'nullable|url',
-            'learn_more_link' => 'nullable|url', // Adicione esta linha para validação
+            'subtitle' => 'nullable|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'learn_more_link' => 'nullable|url',
         ]);
 
-        $banner = BannerSection::firstOrNew(['id' => 1]);
+        $bannerSection = BannerSection::first() ?? new BannerSection();
 
         if ($request->hasFile('image')) {
-            if ($banner->image_path && Storage::disk('public')->exists($banner->image_path)) {
-                Storage::disk('public')->delete($banner->image_path);
-            }
-
-            // Passa a largura máxima de 1080px
-            $imagePath = $this->handleImageUpload($request, 'image', 'banners', 1920);
-            if ($imagePath) {
-                $banner->image_path = $imagePath;
-            }
+            $imagePath = $request->file('image')->store('banners', 'public');
+            // Se houver uma imagem antiga, pode ser interessante deletá-la aqui
+            $bannerSection->image_path = $imagePath;
         }
 
-        $banner->title = $request->title;
-        $banner->excerpt = $request->excerpt;
-        $banner->youtube_link = $request->youtube_link;
-        $banner->spotify_link = $request->spotify_link;
-        $banner->learn_more_link = $request->learn_more_link; // Adicione esta linha para salvar o link
-        $banner->save();
+        $bannerSection->title = $request->title;
+        $bannerSection->subtitle = $request->subtitle;
+        $bannerSection->learn_more_link = $request->learn_more_link;
+        $bannerSection->save();
 
-        return redirect()->route('admin.forms.bannerSection')->with('success', 'Banner atualizado com sucesso!');
+        return redirect()->back()->with('success', 'Seção de banner atualizada com sucesso!');
     }
+
+    // --- MÉTODOS PARA SPOTIFY SECTION ---
 
     public function spotifySection()
     {
-        $spotify = SpotifySection::first();
-        return view('admin.forms.spotifySection', compact('spotify'));
+        $spotifySection = SpotifySection::first();
+        return view('admin.forms.spotifySection', compact('spotifySection'));
     }
 
     public function storeSpotifySection(Request $request)
     {
         $request->validate([
-            'cover_image' => 'nullable|image|max:32000', // 5MB
-            'spotify_link' => 'nullable|url',
+            'title' => 'required|string|max:255',
+            'embed_code' => 'required|string',
         ]);
 
-        $spotifySection = SpotifySection::firstOrNew(['id' => 1]);
+        $embedCode = $request->input('embed_code');
+        $coverImageUrl = $this->getSpotifyCoverFromEmbed($embedCode);
 
-        if ($request->hasFile('cover_image')) {
-            if ($spotifySection->cover_image_path && Storage::disk('public')->exists($spotifySection->cover_image_path)) {
-                Storage::disk('public')->delete($spotifySection->cover_image_path);
-            }
+        if (!$coverImageUrl) {
+            // Se a API falhar, continuamos salvando o embed, mas retornamos um aviso.
+            return redirect()->back()->with('error', 'Não foi possível obter a capa do Spotify. Verifique o código de embed e suas credenciais da API.');
+        }
 
-            // Passa a largura máxima de 720px
-            $imagePath = $this->handleImageUpload($request, 'cover_image', 'spotify_covers', 720);
-            if ($imagePath) {
-                $spotifySection->cover_image_path = $imagePath;
+        SpotifySection::updateOrCreate(
+            ['id' => 1], // Sempre atualiza o primeiro e único registro
+            [
+                'title' => $request->input('title'),
+                'embed_code' => $embedCode,
+                'cover_image_url' => $coverImageUrl,
+            ]
+        );
+
+        return redirect()->back()->with('success', 'Seção do Spotify atualizada com sucesso!');
+    }
+
+
+    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY ---
+
+    /**
+     * Obtém a imagem da capa do Spotify em alta resolução a partir do código de embed.
+     * Retorna a URL da imagem ou null em caso de falha.
+     */
+    private function getSpotifyCoverFromEmbed(?string $embedCode): ?string
+    {
+        if (empty($embedCode)) {
+            return null;
+        }
+
+        // 1. Extrair o ID da música do código de embed
+        preg_match('/\/track\/([a-zA-Z0-9]+)/', $embedCode, $matches);
+        $trackId = $matches[1] ?? null;
+
+        if (!$trackId) {
+            Log::error('Spotify API: Não foi possível extrair o Track ID do embed code.', ['embed' => $embedCode]);
+            return null;
+        }
+
+        // 2. Obter o token de acesso
+        $accessToken = $this->getSpotifyAccessToken();
+        if (!$accessToken) {
+            Log::error('Spotify API: Falha ao obter o Access Token.');
+            return null;
+        }
+
+        // 3. Fazer a chamada para a API Web do Spotify
+        $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$trackId}");
+
+        if ($response->successful()) {
+            $trackData = $response->json();
+            // A API retorna imagens em várias resoluções. O índice 0 é 640x640.
+            if (!empty($trackData['album']['images'][0]['url'])) {
+                return $trackData['album']['images'][0]['url'];
             }
         }
 
-        $spotifySection->is_visible = $request->has('is_visible');
-        $spotifySection->spotify_link = $request->spotify_link;
-        $spotifySection->save();
-
-        return redirect()->route('admin.forms.spotifySection')->with('success', 'Seção Spotify atualizada com sucesso!');
+        Log::error('Spotify API: Falha na requisição para obter os dados da música.', ['status' => $response->status(), 'body' => $response->body()]);
+        return null;
     }
+
+    /**
+     * Obtém um token de acesso da API do Spotify.
+     * O token é armazenado em cache para otimizar requisições futuras.
+     */
+    private function getSpotifyAccessToken(): ?string
+    {
+        return Cache::remember('spotify_access_token', 3500, function () {
+            $clientId = config('services.spotify.client_id');
+            $clientSecret = config('services.spotify.client_secret');
+
+            if (!$clientId || !$clientSecret) {
+                Log::error('Credenciais da API do Spotify não encontradas no .env ou no arquivo de configuração.');
+                return null;
+            }
+
+            $response = Http::asForm()->withHeaders([
+                'Authorization' => 'Basic ' . base64_encode($clientId . ':' . $clientSecret),
+            ])->post('https://accounts.spotify.com/api/token', [
+                'grant_type' => 'client_credentials',
+            ]);
+
+            if ($response->successful()) {
+                return $response->json()['access_token'];
+            }
+
+            return null;
+        });
+    }
+
+    // --- OUTROS MÉTODOS ---
 
     public function contactPage()
     {
+        // Lógica para a página de contato, se houver
         return view('admin.forms.contactPage');
     }
 }

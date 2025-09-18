@@ -1,5 +1,4 @@
 <?php
-// app/Models/SpotifySection.php
 
 namespace App\Models;
 
@@ -10,9 +9,14 @@ class SpotifySection extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'is_visible',
-        'cover_image_path',
-        'spotify_link',
+        'title',
+        'embed_code',
+        'cover_image_url', // Adicionar esta linha
     ];
 }
