@@ -40,7 +40,7 @@ class FormController extends Controller
     }
 
 
-    // --- MÉTODOS PARA SPOTIFY SECTION (ATUALIZADO) ---
+    // --- MÉTODOS PARA SPOTIFY SECTION (sem alterações) ---
 
     public function spotifySection()
     {
@@ -51,7 +51,7 @@ class FormController extends Controller
     public function storeSpotifySection(Request $request)
     {
         $request->validate([
-            'embed_link' => 'required|string', // A validação de URL não é mais necessária, pois pode ser um iframe
+            'embed_link' => 'required|string',
         ]);
 
         $spotifyInput = $request->input('embed_link');
@@ -78,28 +78,36 @@ class FormController extends Controller
     {
         if (empty($input)) return null;
 
-        // Tenta extrair o ID da música de um link ou de um iframe
-        preg_match('/\/track\/([a-zA-Z0-9]+)/', $input, $matches);
-        $trackId = $matches[1] ?? null;
-
-        if (!$trackId) {
-            Log::error('Spotify API: Não foi possível extrair o Track ID do input.', ['input' => $input]);
-            return null;
-        }
-
         $accessToken = $this->getSpotifyAccessToken();
         if (!$accessToken) return null;
 
-        $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$trackId}");
-
-        if ($response->successful() && !empty($response->json()['album']['images'][0]['url'])) {
-            return $response->json()['album']['images'][0]['url'];
+        // Tenta identificar se é um link de MÚSICA (track)
+        preg_match('/\/track\/([a-zA-Z0-9]+)/', $input, $trackMatches);
+        if (!empty($trackMatches[1])) {
+            $trackId = $trackMatches[1];
+            $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$trackId}");
+            
+            if ($response->successful() && !empty($response->json()['album']['images'][0]['url'])) {
+                return $response->json()['album']['images'][0]['url'];
+            }
         }
 
-        Log::error('Spotify API: Falha na requisição para obter os dados da música.', [
-            'status' => $response->status(), 
-            'body' => $response->body()
-        ]);
+        // Se não for música, tenta identificar se é um link de ARTISTA (artist)
+        preg_match('/\/artist\/([a-zA-Z0-9]+)/', $input, $artistMatches);
+        if (!empty($artistMatches[1])) {
+            $artistId = $artistMatches[1];
+            // Busca o álbum mais recente do artista
+            $response = Http::withToken($accessToken)->get("https://open.spotify.com/user/seuusuario3{$artistId}/albums", [
+                'limit' => 1, // Pega apenas o item mais recente
+                'include_groups' => 'album,single', // Inclui tanto álbuns quanto singles
+            ]);
+
+            if ($response->successful() && !empty($response->json()['items'][0]['images'][0]['url'])) {
+                return $response->json()['items'][0]['images'][0]['url'];
+            }
+        }
+
+        Log::error('Spotify API: Não foi possível extrair ID de música ou artista do input.', ['input' => $input]);
         return null;
     }
 
