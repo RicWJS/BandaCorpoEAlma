@@ -12,7 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('spotify_sections', function (Blueprint $table) {
-            $table->string('cover_image_url')->nullable()->after('embed_code');
+            // 1. Adiciona a coluna de título
+            $table->string('title')->after('id');
+
+            // 2. Renomeia a coluna 'spotify_link' para 'embed_link'
+            $table->renameColumn('spotify_link', 'embed_link');
+
+            // 3. Adiciona a nova coluna para a URL da capa vinda da API
+            $table->string('cover_image_url')->nullable()->after('embed_link');
+
+            // 4. Remove a coluna antiga de upload manual de imagem
+            $table->dropColumn('cover_image_path');
         });
     }
 
@@ -22,7 +32,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('spotify_sections', function (Blueprint $table) {
+            // Reverte as operações na ordem inversa
+            $table->string('cover_image_path')->nullable();
             $table->dropColumn('cover_image_url');
+            $table->renameColumn('embed_link', 'spotify_link');
+            $table->dropColumn('title');
         });
     }
 };
