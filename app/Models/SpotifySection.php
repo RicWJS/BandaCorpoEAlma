@@ -15,7 +15,6 @@ class SpotifySection extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'title',
         'embed_link',
         'cover_image_url',
         'is_visible',

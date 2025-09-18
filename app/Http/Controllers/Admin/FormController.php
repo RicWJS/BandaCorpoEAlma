@@ -12,8 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class FormController extends Controller
 {
-    // --- MÉTODOS PARA BANNER SECTION ---
-
+    // --- MÉTODOS PARA BANNER SECTION (sem alterações) ---
     public function bannerSection()
     {
         $bannerSection = BannerSection::first();
@@ -28,23 +27,20 @@ class FormController extends Controller
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
             'learn_more_link' => 'nullable|url',
         ]);
-
         $bannerSection = BannerSection::first() ?? new BannerSection();
-
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('banners', 'public');
             $bannerSection->image_path = $imagePath;
         }
-
         $bannerSection->title = $request->title;
         $bannerSection->subtitle = $request->subtitle;
         $bannerSection->learn_more_link = $request->learn_more_link;
         $bannerSection->save();
-
         return redirect()->back()->with('success', 'Seção de banner atualizada com sucesso!');
     }
 
-    // --- MÉTODOS PARA SPOTIFY SECTION ---
+
+    // --- MÉTODOS PARA SPOTIFY SECTION (ATUALIZADO) ---
 
     public function spotifySection()
     {
@@ -55,22 +51,20 @@ class FormController extends Controller
     public function storeSpotifySection(Request $request)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
-            'embed_link' => 'required|string',
+            'embed_link' => 'required|string', // A validação de URL não é mais necessária, pois pode ser um iframe
         ]);
 
-        $embedCode = $request->input('embed_link');
-        $coverImageUrl = $this->getSpotifyCoverFromEmbed($embedCode);
+        $spotifyInput = $request->input('embed_link');
+        $coverImageUrl = $this->getSpotifyCoverFromInput($spotifyInput);
 
         if (!$coverImageUrl) {
-            return redirect()->back()->with('error', 'Não foi possível obter a capa do Spotify. Verifique o código de embed e se as credenciais da API estão corretas no .env.');
+            return redirect()->back()->with('error', 'Não foi possível obter a capa do Spotify. Verifique o link ou código de embed.');
         }
 
         SpotifySection::updateOrCreate(
             ['id' => 1],
             [
-                'title' => $request->input('title'),
-                'embed_link' => $embedCode,
+                'embed_link' => $spotifyInput,
                 'cover_image_url' => $coverImageUrl,
             ]
         );
@@ -79,38 +73,33 @@ class FormController extends Controller
     }
 
 
-    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY ---
-
-    private function getSpotifyCoverFromEmbed(?string $embedCode): ?string
+    // --- MÉTODOS PRIVADOS PARA A API DO SPOTIFY (LÓGICA ATUALIZADA) ---
+    private function getSpotifyCoverFromInput(?string $input): ?string
     {
-        if (empty($embedCode)) {
-            return null;
-        }
+        if (empty($input)) return null;
 
-        preg_match('/\/track\/([a-zA-Z0-9]+)/', $embedCode, $matches);
+        // Tenta extrair o ID da música de um link ou de um iframe
+        preg_match('/\/track\/([a-zA-Z0-9]+)/', $input, $matches);
         $trackId = $matches[1] ?? null;
 
         if (!$trackId) {
-            Log::error('Spotify API: Não foi possível extrair o Track ID do embed code.', ['embed' => $embedCode]);
+            Log::error('Spotify API: Não foi possível extrair o Track ID do input.', ['input' => $input]);
             return null;
         }
 
         $accessToken = $this->getSpotifyAccessToken();
-        if (!$accessToken) {
-            Log::error('Spotify API: Falha ao obter o Access Token.');
-            return null;
-        }
+        if (!$accessToken) return null;
 
         $response = Http::withToken($accessToken)->get("https://api.spotify.com/v1/tracks/{$trackId}");
 
-        if ($response->successful()) {
-            $trackData = $response->json();
-            if (!empty($trackData['album']['images'][0]['url'])) {
-                return $trackData['album']['images'][0]['url'];
-            }
+        if ($response->successful() && !empty($response->json()['album']['images'][0]['url'])) {
+            return $response->json()['album']['images'][0]['url'];
         }
 
-        Log::error('Spotify API: Falha na requisição para obter os dados da música.', ['status' => $response->status(), 'body' => $response->body()]);
+        Log::error('Spotify API: Falha na requisição para obter os dados da música.', [
+            'status' => $response->status(), 
+            'body' => $response->body()
+        ]);
         return null;
     }
 
@@ -134,12 +123,9 @@ class FormController extends Controller
             if ($response->successful()) {
                 return $response->json()['access_token'];
             }
-
             return null;
         });
     }
-
-    // --- OUTROS MÉTODOS ---
 
     public function contactPage()
     {

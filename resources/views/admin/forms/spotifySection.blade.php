@@ -1,38 +1,52 @@
-<?php
+@extends('admin.layouts.app')
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+@section('title', 'Editar Seção Spotify')
 
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::table('spotify_sections', function (Blueprint $table) {
-            // 1. Renomeia a coluna do link
-            $table->renameColumn('spotify_link', 'embed_link');
+@section('content')
+<div class="admin-form-container">
+    <div class="form-header">
+        <h1>Gerenciar Seção Spotify</h1>
+        <p>Controle o conteúdo da seção "Ouça no Spotify" que aparece na página inicial.</p>
+    </div>
 
-            // 2. Adiciona a nova coluna para a URL da imagem do artista
-            $table->string('cover_image_url')->nullable()->after('embed_link');
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+    @if ($errors->any())
+        <div class="alert alert-error">
+            <strong>Oops! Verifique os erros abaixo:</strong>
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
 
-            // 3. Remove a coluna antiga de upload manual
-            $table->dropColumn('cover_image_path');
-        });
-    }
+    <form action="{{ route('admin.forms.spotifySection.store') }}" method="POST">
+        @csrf
 
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('spotify_sections', function (Blueprint $table) {
-            // Reverte as operações na ordem inversa
-            $table->string('cover_image_path')->nullable();
-            $table->dropColumn('cover_image_url');
-            $table->renameColumn('embed_link', 'spotify_link');
-        });
-    }
-};
+        <div class="form-group">
+            <label for="embed_link">Link ou Código de Embed do Spotify</label>
+            <textarea id="embed_link" name="embed_link" class="form-control" rows="4" required>{{ old('embed_link', $spotifySection->embed_link ?? '') }}</textarea>
+            <p class="form-text">Cole aqui o link do embed/iframe do Spotify. A capa do álbum será buscada automaticamente.</p>
+        </div>
+
+        @if (!empty($spotifySection->cover_image_url))
+            <div class="form-group">
+                <label>Capa do Álbum Atual (Automática)</label>
+                <div>
+                    <img src="{{ $spotifySection->cover_image_url }}" alt="Capa do Álbum" style="max-width: 200px; border-radius: 8px;">
+                </div>
+            </div>
+        @endif
+        
+        <div class="form-footer">
+            <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+        </div>
+    </form>
+</div>
+@endsection
