@@ -17,7 +17,7 @@
                     @endif
 
                     @if ($bannerData->learn_more_link)
-                        <a href="{{ $bannerData->learn_more_link }}" class="btn-spotify btn-learn-more" target="_blank">
+                        <a href="{{ $bannerData->learn_more_link }}" class="btn-spotify btn-learn-more">
                             Saiba Mais <i class="fas fa-arrow-right"></i>
                         </a>
                     @endif
