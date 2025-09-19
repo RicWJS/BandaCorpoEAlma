@@ -53,10 +53,15 @@
                     </td>
                     <td class="actions">
                         
-                        {{-- =========== CÓDIGO ADICIONADO =========== --}}
+                        {{-- =========== CÓDIGO MODIFICADO =========== --}}
                         @if ($post->status == 'published')
                             <a href="{{ route('news.show', $post->slug) }}" target="_blank" class="btn-action btn-view" title="Visualizar no site">
                                 <i class="fas fa-eye"></i>
+                            </a>
+                        @else
+                            {{-- Novo botão de preview para rascunhos --}}
+                            <a href="{{ route('news.show', ['slug' => $post->slug, 'preview' => 'true']) }}" target="_blank" class="btn-action btn-view" title="Pré-visualizar rascunho">
+                                <i class="fas fa-eye-slash"></i>
                             </a>
                         @endif
                         {{-- ========================================= --}}

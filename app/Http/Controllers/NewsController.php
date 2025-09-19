@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session; // ADICIONADO
 
 class NewsController extends Controller
 {
@@ -31,10 +32,24 @@ class NewsController extends Controller
         ]);
     }
 
-    public function show($slug)
+    // MODIFICADO: Método 'show' agora aceita Request e verifica o modo preview
+    public function show(Request $request, $slug)
     {
-        $post = Post::with('category')->where('slug', $slug)->where('status', 'published')->firstOrFail();
-        $post->increment('views_count');
+        $query = Post::with('category')->where('slug', $slug);
+
+        // Se o parâmetro 'preview' existir e o admin estiver logado,
+        // a verificação de status é ignorada, permitindo ver rascunhos.
+        if (!$request->has('preview') || !Session::has('admin_authenticated')) {
+            $query->where('status', 'published');
+        }
+
+        $post = $query->firstOrFail();
+
+        // O contador de visualizações só incrementa se o post estiver
+        // publicado e não estiver em modo de pré-visualização.
+        if ($post->status == 'published' && !$request->has('preview')) {
+            $post->increment('views_count');
+        }
 
         $recentNews = Post::where('status', 'published')
                           ->where('id', '!=', $post->id)
@@ -65,7 +80,6 @@ class NewsController extends Controller
     
         return view('news.category', [
             'posts' => $posts,
-            // 'categories' => $categories, // A linha foi removida
             'currentCategory' => $currentCategory,
             'showRecentNewsWidget' => false,
             'searchTerm' => $searchTerm,
