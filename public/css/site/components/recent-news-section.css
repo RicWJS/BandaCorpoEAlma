@@ -6,7 +6,7 @@
 
 .news-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 30px;
   margin-bottom: 50px;
 }
@@ -167,4 +167,18 @@
     padding: 50px 20px;
     background: rgba(0,0,0,0.2);
     border-radius: 12px;
+}
+
+@media (max-width: 992px) {
+  .news-grid {
+    /* Em telas de tablet, a grade passa a ter 2 colunas */
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .news-grid {
+    /* Em telas de celular, a grade passa a ter 1 coluna */
+    grid-template-columns: 1fr;
+  }
 }
