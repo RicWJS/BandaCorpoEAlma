@@ -76,27 +76,25 @@ Route::get('/contato', [ContactController::class, 'index'])->name('contact');
 
 // Rotas para redes sociais (redirecionamentos externos)
 Route::get('/youtube', function () {
-    return redirect()->away('https://youtube.com/@seucanal');
+    return redirect()->away('https://www.youtube.com/@BandaCorpoeAlma');
 })->name('social.youtube');
 
 Route::get('/spotify', function () {
-    return redirect()->away('https://open.spotify.com/user/seuusuario');
+    return redirect()->away('https://open.spotify.com/artist/0SzWnIde8xRsuGDZYZdvE5?si=AQy5QS9NSIW-8so3ZUkzBA');
 })->name('social.spotify');
 
 Route::get('/instagram', function () {
-    return redirect()->away('https://instagram.com/seuusuario');
+    return redirect()->away('https://www.instagram.com/corpoealmabr');
 })->name('social.instagram');
 
 Route::get('/facebook', function () {
-    return redirect()->away('https://facebook.com/suapagina');
+    return redirect()->away('https://www.facebook.com/corpoealmabr');
 })->name('social.facebook');
 
 Route::get('/tiktok', function () {
-    return redirect()->away('https://tiktok.com/@seuusuario');
+    return redirect()->away('https://www.tiktok.com/@corpoealmaofc?_t=ZM-90KbqCRlN2e&_r=1');
 })->name('social.tiktok');
 
-
-Route::get('/run-migrations', function () {
-    Artisan::call('migrate');
-    return 'Migrations executed!';
-});
+Route::get('/pinterest', function () {
+    return redirect()->away('https://pin.it/6ITVGg7HB');
+})->name('social.pinterest');

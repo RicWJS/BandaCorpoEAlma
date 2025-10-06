@@ -53,6 +53,7 @@
                             <li class="footer-social-item"><a href="{{ route('social.instagram') }}" target="_blank" class="footer-social-link"><i class="fab fa-instagram"></i><span>Instagram</span></a></li>
                             <li class="footer-social-item"><a href="{{ route('social.facebook') }}" target="_blank" class="footer-social-link"><i class="fab fa-facebook"></i><span>Facebook</span></a></li>
                             <li class="footer-social-item"><a href="{{ route('social.tiktok') }}" target="_blank" class="footer-social-link"><i class="fab fa-tiktok"></i><span>TikTok</span></a></li>
+                            <li class="footer-social-item"><a href="{{ route('social.pinterest') }}" target="_blank" class="footer-social-link"><i class="fab fa-pinterest"></i><span>Pinterest</span></a></li>
                         </ul>
                     </div>
                 </div>

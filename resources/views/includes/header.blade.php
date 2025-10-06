@@ -53,6 +53,11 @@
                                 <i class="fab fa-tiktok"></i>
                             </a>
                         </li>
+                        <li class="social-item pinterest-item">
+                            <a href="{{ route('social.pinterest') }}" target="_blank" class="social-link interactive-element" title="Pinterest">
+                                <i class="fab fa-pinterest"></i>
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </nav>

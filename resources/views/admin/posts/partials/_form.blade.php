@@ -92,13 +92,33 @@
 <script>
     tinymce.init({
         selector: 'textarea#content',
-        // ... (resto das configurações do TinyMCE sem alterações)
         plugins: 'code table lists link image media',
         toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | indent outdent | bullist numlist | code | table | link image media',
         skin: 'oxide-dark',
         content_css: 'dark',
         height: 500,
         language: 'pt_BR',
+        
+        // Desabilita seleção de fontes
+        fontsize_formats: '',
+        font_formats: '',
+        
+        // Remove formatação de fonte ao colar
+        paste_as_text: false,
+        paste_preprocess: function(plugin, args) {
+            // Remove tags de fonte e estilos inline de font-family e font-size
+            args.content = args.content.replace(/<font[^>]*>/gi, '');
+            args.content = args.content.replace(/<\/font>/gi, '');
+            args.content = args.content.replace(/font-family:[^;"]*/gi, '');
+            args.content = args.content.replace(/font-size:[^;"]*/gi, '');
+        },
+        
+        // Filtra tags e atributos indesejados
+        valid_elements: '*[*]',
+        invalid_styles: {
+            '*': 'font-family font-size'
+        },
+        
         content_style: `
             body { background-color: #22262e; color: #ffffff; font-family: Arial, sans-serif; font-size: 14px; line-height: 1.4; margin: 10px; }
             p { margin: 0 0 10px 0; }
@@ -110,6 +130,7 @@
             table td, table th { border: 1px solid #3f4550; padding: 8px; color: #ffffff; }
             table th { background-color: #3f4550; }
         `,
+        
         setup: function(editor) {
             editor.on('init', function() {
                 editor.getBody().style.backgroundColor = '#22262e';

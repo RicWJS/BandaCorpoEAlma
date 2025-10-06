@@ -135,6 +135,10 @@
   background: #55555580;
 }
 
+.pinterest-item .social-link:hover {
+  background: #e60023e6;
+}
+
 /* ===================================== */
 /* === RESPONSIVIDADE PARA O HEADER === */
 /* ===================================== */
